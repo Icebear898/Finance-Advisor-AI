@@ -1,12 +1,14 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from typing import List, Optional
 import logging
 import os
 import shutil
 from datetime import datetime
+from app.models.auth import User
 from app.services.data_ingestion import DataIngestionService
 from app.utils.helpers import sanitize_filename, format_file_size
 from app.config import settings
+from app.dependencies.auth import get_current_active_user
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,8 @@ data_ingestion_service = DataIngestionService()
 @router.post("/upload")
 async def upload_document(
     file: UploadFile = File(...),
-    description: Optional[str] = Form(None)
+    description: Optional[str] = Form(None),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Upload and process a document"""
     try:

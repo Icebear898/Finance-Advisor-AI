@@ -1,7 +1,17 @@
-import React from 'react';
-import { Brain, Bell, User, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { Brain, Bell, User, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 const Navbar: React.FC = () => {
+  const { user, logout } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out successfully');
+  };
+
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,14 +40,36 @@ const Navbar: React.FC = () => {
             </button>
 
             {/* User Profile */}
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">John Doe</p>
-                <p className="text-xs text-gray-500">Premium User</p>
+            <div className="relative">
+              <div className="flex items-center space-x-3">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">{user?.full_name || 'User'}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+                <button 
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center justify-center w-8 h-8 bg-primary-100 text-primary-600 rounded-full hover:bg-primary-200 transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                </button>
               </div>
-              <button className="flex items-center justify-center w-8 h-8 bg-primary-100 text-primary-600 rounded-full hover:bg-primary-200 transition-colors">
-                <User className="w-4 h-4" />
-              </button>
+
+              {/* User Dropdown Menu */}
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                  <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+                    <p className="font-medium">{user?.full_name}</p>
+                    <p className="text-gray-500">{user?.email}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -4,11 +4,13 @@ A comprehensive AI-powered financial advisory application that provides personal
 
 ## Features
 
+- **🔐 Complete Authentication System**: User registration, login, password reset, and profile management
 - **Personal Finance Advice**: Budgeting, savings, loan EMI calculations
 - **Investment Suggestions**: Stock analysis, mutual fund recommendations, gold investment
 - **Tax Planning**: Indian tax laws, Sections 80C, 80D optimization
 - **Document Analysis**: PDF, Excel, and report analysis with insights
 - **Live Market Updates**: Real-time stock prices, crypto rates, RBI interest rates
+- **Protected Routes**: All features require authentication for security
 
 ## Tech Stack
 
@@ -134,6 +136,17 @@ npm start
 
 ## API Endpoints
 
+### Authentication Endpoints
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - User login
+- `GET /auth/me` - Get current user info
+- `PUT /auth/me` - Update user profile
+- `POST /auth/change-password` - Change password
+- `POST /auth/forgot-password` - Request password reset
+- `POST /auth/reset-password` - Reset password with token
+- `POST /auth/logout` - User logout
+- `GET /auth/users` - Get all users (admin only)
+
 ### Chat Endpoints
 - `POST /api/chat` - Send message to AI advisor
 - `GET /api/chat/history` - Get chat history
@@ -181,13 +194,31 @@ npm run build
 # Serve the build folder with nginx or similar
 ```
 
+## Testing
+
+### Test Authentication System
+```bash
+# Run the authentication test suite
+python test_auth.py
+```
+
+This will test:
+- User registration and login
+- Protected endpoint access
+- Password change functionality
+- Profile updates
+- Password reset flow
+
 ## Security Features
 
-- API key authentication
+- JWT token-based authentication
+- Password hashing with bcrypt
+- Protected API endpoints
 - CORS configuration
 - Input validation and sanitization
 - Rate limiting
 - Secure file upload handling
+- SQL injection prevention
 
 ## Contributing
 

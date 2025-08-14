@@ -6,7 +6,7 @@ from loguru import logger
 import sys
 
 from app.config import settings
-from app.api.routes import chat, documents, finance
+from app.api.routes import chat, documents, finance, auth
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +33,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(documents.router)
 app.include_router(finance.router)

@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     secret_key: str = "your_secret_key_here_change_in_production"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    password_reset_token_expire_hours: int = 24
     
     # Logging
     log_level: str = "INFO"

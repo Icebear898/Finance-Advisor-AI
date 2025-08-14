@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 import logging
 from app.services.finance_api import FinanceAPIService
 from app.models.finance import EMICalculation
+from app.models.auth import User
 from app.utils.helpers import format_currency, format_percentage
+from app.dependencies.auth import get_current_active_user
 from datetime import datetime
 
 logger = logging.getLogger(__name__)

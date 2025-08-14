@@ -2,9 +2,11 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 import logging
 from app.models.chat import ChatRequest, ChatResponse, ChatMessage, MessageRole
+from app.models.auth import User
 from app.services.gemini_service import GeminiService
 from app.services.rag_pipeline import RAGPipeline
 from app.utils.helpers import parse_financial_query, generate_session_id
+from app.dependencies.auth import get_current_active_user
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -20,7 +22,7 @@ chat_sessions = {}
 
 
 @router.post("/", response_model=ChatResponse)
-async def send_message(request: ChatRequest):
+async def send_message(request: ChatRequest, current_user: User = Depends(get_current_active_user)):
     """Send a message to the AI Finance Advisor"""
     try:
         # Parse the financial query to extract context
@@ -89,7 +91,7 @@ async def send_message(request: ChatRequest):
 
 
 @router.get("/history/{session_id}")
-async def get_chat_history(session_id: str):
+async def get_chat_history(session_id: str, current_user: User = Depends(get_current_active_user)):
     """Get chat history for a session"""
     try:
         if session_id not in chat_sessions:
