@@ -1,8 +1,3 @@
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_core.documents import Document
-from app.config import settings
 from typing import List, Dict, Any, Optional
 import os
 import pickle
@@ -10,13 +5,35 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    from langchain_community.embeddings import HuggingFaceEmbeddings
+    from langchain_community.vectorstores import FAISS
+    from langchain_core.documents import Document
+    from app.config import settings
+    LANGCHAIN_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"LangChain dependencies not available: {e}")
+    LANGCHAIN_AVAILABLE = False
+
 
 class RAGPipeline:
     def __init__(self):
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name=settings.embedding_model,
-            model_kwargs={'device': 'cpu'}
-        )
+        if not LANGCHAIN_AVAILABLE:
+            logger.warning("RAG Pipeline disabled due to missing dependencies")
+            self.embeddings = None
+            self.text_splitter = None
+            self.vector_store = None
+            return
+            
+        try:
+            self.embeddings = HuggingFaceEmbeddings(
+                model_name=settings.embedding_model,
+                model_kwargs={'device': 'cpu'}
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize embeddings: {e}")
+            self.embeddings = None
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
@@ -27,6 +44,10 @@ class RAGPipeline:
 
     def load_vector_store(self):
         """Load existing vector store or create new one"""
+        if not LANGCHAIN_AVAILABLE or self.embeddings is None:
+            logger.warning("Vector store disabled due to missing dependencies")
+            return
+            
         try:
             vector_store_path = os.path.join(settings.vector_db_path, "faiss_index")
             if os.path.exists(vector_store_path):
@@ -45,10 +66,14 @@ class RAGPipeline:
         except Exception as e:
             logger.error(f"Error loading vector store: {str(e)}")
             # Create empty vector store as fallback
-            self.vector_store = FAISS.from_texts(
-                ["Initial document"], 
-                self.embeddings
-            )
+            try:
+                self.vector_store = FAISS.from_texts(
+                    ["Initial document"], 
+                    self.embeddings
+                )
+            except Exception as fallback_error:
+                logger.error(f"Failed to create fallback vector store: {fallback_error}")
+                self.vector_store = None
 
     def save_vector_store(self):
         """Save vector store to disk"""
@@ -61,6 +86,9 @@ class RAGPipeline:
 
     def process_document(self, content: str, metadata: Dict[str, Any]) -> List[Document]:
         """Process document content and create chunks"""
+        if not LANGCHAIN_AVAILABLE or self.text_splitter is None:
+            logger.warning("Document processing disabled due to missing dependencies")
+            return []
         try:
             # Split text into chunks
             chunks = self.text_splitter.split_text(content)
@@ -107,8 +135,11 @@ class RAGPipeline:
         query: str, 
         k: int = 5,
         filter_metadata: Optional[Dict[str, Any]] = None
-    ) -> List[Document]:
+    ) -> List[Dict[str, Any]]:
         """Search for relevant documents"""
+        if not LANGCHAIN_AVAILABLE or self.vector_store is None:
+            logger.warning("Document search disabled due to missing dependencies")
+            return []
         try:
             if self.vector_store is None:
                 return []
@@ -136,6 +167,9 @@ class RAGPipeline:
         max_chunks: int = 3
     ) -> str:
         """Get relevant context for a query"""
+        if not LANGCHAIN_AVAILABLE or self.vector_store is None:
+            logger.warning("Context retrieval disabled due to missing dependencies")
+            return ""
         try:
             # Search for relevant documents
             relevant_docs = self.search_documents(query, k=max_chunks)
